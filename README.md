@@ -11,7 +11,9 @@ npm install
 ## Getting Started
 
 First, run the development server:
-
+```bash
+rm -rf .next
+``` 
 ```bash
 npm run dev
 # or

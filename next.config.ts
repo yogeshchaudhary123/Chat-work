@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /* config options here */  
+  srcDir: "src",
   experimental: {
     typedRoutes: true
   },
-  srcDir: "src",
   devIndicators: false
 };
 
