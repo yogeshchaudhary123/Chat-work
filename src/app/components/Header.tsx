@@ -47,18 +47,8 @@ export default function Header() {
               >
                 Home
               </Link>
-              <Link
-                href="/about"
-                className="text-gray-600 hover:text-gray-900"
-              >
-                About
-              </Link>
-              <Link
-                href="/contact"
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Contact
-              </Link>
+              
+              
             </nav>
             <button
               onClick={() => signOut()}
