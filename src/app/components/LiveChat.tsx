@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, FormEvent } from 'react';
+import { useEffect, useState, useRef, FormEvent, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { io, Socket } from 'socket.io-client';
 import api from '../../../api';
@@ -20,6 +20,13 @@ interface ChatMessage {
   seen?: number;
 }
 
+interface ApiChatMessage {
+  text: string;
+  sender_id: string;
+  time: string;
+  seen: number;
+}
+
 export default function LiveChat() {
   const { data: session } = useSession();
   const [recipient, setRecipient] = useState('');
@@ -29,6 +36,22 @@ export default function LiveChat() {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [showSidebar, setShowSidebar] = useState(false);
   const socketRef = useRef<Socket | null>(null);
+
+  const getUsers = useCallback(async (currentUserId: string) => {
+    try {
+      const { data } = await api.get<User[]>('/api/users');
+      setUsers(
+        data
+          .filter(u => String(u.id) !== String(currentUserId))
+          .map(u => ({
+            ...u,
+            active: onlineUsers.includes(String(u.id)),
+          }))
+      );
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+    }
+  }, [onlineUsers]);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -55,7 +78,7 @@ export default function LiveChat() {
             params: { userId: session.user.id, otherUserId: recipient },
           });
           setChat(
-            data.map((msg: any) => ({
+            data.map((msg: ApiChatMessage) => ({
               text: msg.text,
               sender: msg.sender_id === session.user.id ? 'You' : 'Other',
               time: msg.time,
@@ -82,7 +105,7 @@ export default function LiveChat() {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, getUsers, recipient]);
 
   useEffect(() => {
     if (!users.length) return;
@@ -90,7 +113,7 @@ export default function LiveChat() {
     setUsers(prev =>
       prev.map(u => ({ ...u, active: onlineUsers.includes(String(u.id)) }))
     );
-  }, [onlineUsers]);
+  }, [onlineUsers, users.length]);
 
   // Fetch chat history when recipient changes
   useEffect(() => {
@@ -101,7 +124,7 @@ export default function LiveChat() {
           params: { userId: session.user.id, otherUserId: recipient },
         });
         setChat(
-          data.map((msg: any) => ({
+          data.map((msg: ApiChatMessage) => ({
             text: msg.text,
             sender: msg.sender_id === session.user.id ? 'You' : 'Other',
             time: msg.time,
@@ -134,7 +157,7 @@ export default function LiveChat() {
           params: { userId: session.user.id, otherUserId: recipient },
         });
         setChat(
-          data.map((msg: any) => ({
+          data.map((msg: ApiChatMessage) => ({
             text: msg.text,
             sender: msg.sender_id === session.user.id ? 'You' : 'Other',
             time: msg.time,
@@ -150,22 +173,6 @@ export default function LiveChat() {
       window.removeEventListener('focus', handleFocus);
     };
   }, [recipient, session?.user?.id]);
-
-  const getUsers = async (currentUserId: string) => {
-    try {
-      const { data } = await api.get<User[]>('/api/users');
-      setUsers(
-        data
-          .filter(u => String(u.id) !== String(currentUserId))
-          .map(u => ({
-            ...u,
-            active: onlineUsers.includes(String(u.id)),
-          }))
-      );
-    } catch (err) {
-      console.error('Failed to fetch users:', err);
-    }
-  };
 
   const sendMessage = async (e: FormEvent) => {
     e.preventDefault();
@@ -271,27 +278,6 @@ export default function LiveChat() {
               <aside className="flex-1 p-2 sm:p-4 overflow-y-auto space-y-2 bg-zinc-400" >
                 {chat.map((msg, idx) => {
                   const isMe = msg.sender === 'You';
-                  // Standardize time formatting to 12-hour with am/pm
-                  let formattedTime = msg.time;
-                  if (msg.time) {
-                    // Try to parse as Date, fallback to original if fails
-                    let dateObj;
-                    if (/\d{2}:\d{2}/.test(msg.time) && !msg.time.includes('AM') && !msg.time.includes('PM') && !msg.time.includes('am') && !msg.time.includes('pm')) {
-                      // If time is like '17:00', create a Date for today with that time
-                      const [h, m] = msg.time.split(':');
-                      dateObj = new Date();
-                      dateObj.setHours(Number(h), Number(m), 0, 0);
-                    } else {
-                      // Try to parse as Date string
-                      dateObj = new Date(`1970-01-01T${msg.time}`);
-                      if (isNaN(dateObj.getTime())) {
-                        dateObj = undefined;
-                      }
-                    }
-                    if (dateObj && !isNaN(dateObj.getTime())) {
-                      formattedTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-                    }
-                  }
                   return (
                     <div
                       key={idx}
@@ -301,8 +287,8 @@ export default function LiveChat() {
                         className={`relative max-w-[75%] px-3 py-2 rounded-lg text-sm break-words flex flex-col
                           ${isMe
                             ? 'bg-green-100 text-black rounded-br-none items-end ml-auto'
-                            : 'bg-white text-black rounded-bl-none items-start mr-auto'}
-                        `}
+                            : 'bg-white text-black rounded-bl-none items-start mr-auto'}`
+                        }
                       >
                         {/* Message Text */}
                         <div>{msg.text}</div>
