@@ -14,6 +14,7 @@ type UserWithToken = {
   image: string;
   accessToken: string;
 };
+console.log(API_BASE_URL,'api base url');
 
 export const authOptions: AuthOptions = {
   session: {
