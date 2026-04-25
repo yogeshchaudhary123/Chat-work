@@ -1,42 +1,46 @@
 "use client"; 
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import cookie from 'js-cookie';
 
 const RouteGuard = ({ children }: { children: React.ReactNode }) => {
-  const { status,data: session } = useSession();
+  const { status, data: session } = useSession();
   const router = useRouter();
-  const pathname = usePathname(); // Get the current pathname
-  const [isRedirecting, setIsRedirecting] = useState(false); // Initially, no redirection
+  const pathname = usePathname();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  const publicPaths = ["/login", "/signup", "/forgot-password", "/reset-password", "/"];
+
   useEffect(() => {
-    console.log(status)
-    // Avoid checking if status is still loading
     if (status === "loading") return;
-    if (session?.user?.token){
-      console.log(session)
+
+    if (session?.user?.token) {
       cookie.set('token', session?.user?.token, { expires: 7 });
     }
-    // Handle unauthenticated users and prevent infinite redirection loop
-    if (status === "unauthenticated" && pathname !== "/login") {
-      setIsRedirecting(true); // Set redirecting state before push
-      router.push("/login");
-    } else if (status === "authenticated" && pathname === "/login") {
-      setIsRedirecting(true); // Set redirecting state before push
-        router.push("/");
-    }
-    else if (status === "authenticated" ) {
-     setIsRedirecting(false);
-      
-    }
-   
-    
-  }, [status, router, pathname ,session]);
 
-  // If the session is still loading or we are redirecting, show the loading indicator
+    const isPublicPath = publicPaths.includes(pathname);
+
+    if (status === "unauthenticated" && !isPublicPath) {
+      setIsRedirecting(true);
+      router.push("/login");
+    } else if (status === "authenticated" && (pathname === "/login" || pathname === "/signup")) {
+      setIsRedirecting(true);
+      router.push("/chat");
+    } else {
+      setIsRedirecting(false);
+    }
+  }, [status, router, pathname, session]);
+
   if (status === "loading" || isRedirecting) {
-    return <p>loading</p>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500 font-medium animate-pulse">Loading Hub...</p>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;

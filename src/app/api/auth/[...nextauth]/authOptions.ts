@@ -14,7 +14,6 @@ type UserWithToken = {
   image: string;
   accessToken: string;
 };
-
 export const authOptions: AuthOptions = {
   session: {
     strategy: 'jwt',
@@ -28,6 +27,7 @@ export const authOptions: AuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+      console.log(API_BASE_URL,'api base url');
         try {
           const res = await axios.post(`${API_BASE_URL}/api/auth/user-login`, {
             email: credentials?.email,
