@@ -58,6 +58,7 @@ export default function LiveChat() {
 
     const socket = io(process.env.NEXT_PUBLIC_API_URL as string, {
       auth: { userId: session.user.id },
+      transports: ['websocket'], // Use websocket first to avoid CORS polling issues
     });
 
     socketRef.current = socket;
