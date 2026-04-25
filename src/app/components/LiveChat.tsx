@@ -66,7 +66,7 @@ export default function LiveChat() {
     socket.emit('register', session.user.id);
 
     const handleReceiveMessage = (msg: string, time?: string) => {
-      console.log('[Client] Message received:', msg);
+      console.log('[Client] Message received:', msg );
       setChat(prev => [...prev, { text: msg, sender: 'Other', time: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), seen: 0 }]);
       // Mark as seen if chat is open and window is focused
       if (recipient && document.hasFocus()) {
@@ -106,7 +106,7 @@ export default function LiveChat() {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [session?.user?.id, getUsers, recipient]);
+  }, [session?.user?.id, recipient]);
 
   useEffect(() => {
     if (!users.length) return;
@@ -220,7 +220,6 @@ export default function LiveChat() {
     setRecipient(id);
   };
 
-
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <div className="flex flex-1 overflow-hidden">
@@ -241,9 +240,9 @@ export default function LiveChat() {
             <h1 className="text-xl font-bold text-green-600">Chats</h1>
           </div>
           <ul>
-            {users.map(user => (
+            {users.map((user, idu) => (
               <li
-                key={user.id}
+                key={idu}
                 onClick={() => { setMessageRecipient(user.id); setShowSidebar(false); }}
                 className={`cursor-pointer  border-b px-4 py-3 text-sm hover:bg-gray-100
                   ${user.id === recipient ? 'bg-green-100' : ''}`}
