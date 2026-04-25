@@ -1,10 +1,10 @@
-import  { AuthOptions } from "next-auth";
+import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { encode, decode } from 'next-auth/jwt';
 import axios from "axios";
 
-const API_BASE_URL =  process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type UserWithToken = {
   id: string;
@@ -14,6 +14,8 @@ type UserWithToken = {
   image: string;
   accessToken: string;
 };
+console.log(API_BASE_URL, 'api base url');
+
 export const authOptions: AuthOptions = {
   session: {
     strategy: 'jwt',
@@ -27,7 +29,7 @@ export const authOptions: AuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-      console.log(API_BASE_URL,'api base url');
+        console.log(API_BASE_URL, 'api base url');
         try {
           const res = await axios.post(`${API_BASE_URL}/api/auth/user-login`, {
             email: credentials?.email,
@@ -39,9 +41,9 @@ export const authOptions: AuthOptions = {
           });
           const user = res.data.user;
           if (user) {
-            console.log(user,'user')
-             return { id: user.id, email: user.email, role: user.role , name: user.name , image:user.image , accessToken: user.token, };
-          
+            console.log(user, 'user')
+            return { id: user.id, email: user.email, role: user.role, name: user.name, image: user.image, accessToken: user.token, };
+
           } else {
             return null; // Return null if login failed
           }
@@ -51,7 +53,7 @@ export const authOptions: AuthOptions = {
           return null;
         }
       },
-     
+
     }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -63,7 +65,7 @@ export const authOptions: AuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-       if (user) {
+      if (user) {
         const typedUser = user as UserWithToken;
         token.id = typedUser.id;
         token.role = typedUser.role;
@@ -74,18 +76,18 @@ export const authOptions: AuthOptions = {
       }
       return token;
     },
-    async session({session,token }) {
+    async session({ session, token }) {
 
-        if (token && session.user) {
-          session.user.id = token.id as string;
-          session.user.role = token.role as string;
-          session.user.image = token.image as string;
-          session.user.token = token.accessToken as string;
-         
-        }
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+        session.user.image = token.image as string;
+        session.user.token = token.accessToken as string;
+
+      }
       return session;
     },
   },
-  debug:true,
+  debug: true,
 };
 
