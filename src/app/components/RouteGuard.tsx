@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import cookie from 'js-cookie';
 
+const publicPaths = ["/login", "/signup", "/forgot-password", "/reset-password", "/"];
+
 const RouteGuard = ({ children }: { children: React.ReactNode }) => {
   const { status, data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const [isRedirecting, setIsRedirecting] = useState(false);
-
-  const publicPaths = ["/login", "/signup", "/forgot-password", "/reset-password", "/"];
 
   useEffect(() => {
     if (status === "loading") return;
