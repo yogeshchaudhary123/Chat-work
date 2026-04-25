@@ -28,6 +28,7 @@ export default function ForgotPassword() {
         setError(data.message || 'Something went wrong');
       }
     } catch (err) {
+      console.error(err);
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -45,7 +46,7 @@ export default function ForgotPassword() {
             <span className="text-2xl font-bold tracking-tight">ChatHub</span>
           </Link>
           <h2 className="text-3xl font-extrabold tracking-tight">Reset Password</h2>
-          <p className="text-gray-500 mt-2">Enter your email and we'll send you a reset link.</p>
+          <p className="text-gray-500 mt-2">Enter your email and we&apos;ll send you a reset link.</p>
         </div>
 
         <div className="glass p-8 rounded-[2.5rem] shadow-2xl border border-white/20">

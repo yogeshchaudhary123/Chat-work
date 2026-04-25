@@ -33,6 +33,7 @@ export default function Signup() {
         setError(data.message || 'Something went wrong');
       }
     } catch (err) {
+      console.error(err);
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
